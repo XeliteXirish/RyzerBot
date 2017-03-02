@@ -1,0 +1,26 @@
+{
+  "name": "ElisaBot",
+  "version": "1.0.0",
+  "description": "An awesome chatter bot meant to tweet anything!",
+  "main": "bot.js",
+  "dependencies": {
+    "twit": "^2.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node bot.js",
+    "test": "node bot.js"
+  },
+  "repository": {
+    "type": "",
+    "url": ""
+  },
+  "keywords": [
+    "node",
+    "js",
+    "twitter",
+    "bot"
+  ],
+  "author": "Shaun O'Neill",
+  "license": "http://creativecommons.org/licenses/by-sa/3.0"
+}
