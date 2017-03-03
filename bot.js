@@ -73,6 +73,7 @@ function tweetEvent(tweet) {
 }
 
 function searchTweets() {
+    console.info('Checking for more tweets...');
 
     let TWITTER_SEARCH_PHRASE = '#hate OR #controversial OR #freespeech';
 
@@ -113,3 +114,5 @@ function checkIsInDb(tweetText, callback) {
         else callback(false);
     });
 }
+
+setInterval(searchTweets, 1800000);
