@@ -74,7 +74,7 @@ function tweetEvent(tweet) {
 
 function searchTweets() {
 
-    let TWITTER_SEARCH_PHRASE = '#controversial OR #freespeech';
+    let TWITTER_SEARCH_PHRASE = '#hate OR #controversial OR #freespeech';
 
     let query = {q: TWITTER_SEARCH_PHRASE, result_type: "recent"};
 
@@ -85,15 +85,31 @@ function searchTweets() {
         }
 
         data.statuses.forEach(status => {
-            saveToDb(status.text)
+            saveToDb(status.text);
         });
     })
 }
 
 function saveToDb(tweetText) {
-    connection.query(`INSERT INTO RyzerTweets SET tweet = ?`, connection.escape(tweetText), function (err, result) {
+    checkIsInDb(tweetText, (result) => {
+        if (!result){
+            connection.query(`INSERT INTO RyzerTweets SET tweet = ?`, tweetText, function (err, result) {
+                if (err){
+                    console.error(err.stack)
+                }
+            })
+        }
+    })
+}
+
+function checkIsInDb(tweetText, callback) {
+    connection.query(`SELECT distinct 1 FROM RyzerTweets WHERE RyzerTweets.tweet = ?;`, tweetText, function (err, result) {
         if (err){
             console.error(err.stack)
         }
-    })
+        let length = result.length;
+
+        if (length > 0) callback(true);
+        else callback(false);
+    });
 }
