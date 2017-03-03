@@ -1,5 +1,5 @@
 const Twit = require('twit');
-const db = require('sqlite');
+const mysql = require('mysql');
 const config = require('./config.json');
 
 const bot = new Twit({
@@ -9,7 +9,14 @@ const bot = new Twit({
     access_token_secret: config.access_token_secret
 });
 
-db.open('./ryzer_tweets.sqlite').catch((err) => {console.error(`Error while opening database, Error: ${err.stack}`)});
+let connection;
+connection = mysql.createConnection({
+    host: config.sql_host,
+    user: config.sql_user,
+    password: config.sql_pass,
+    database: config.sql_db
+});
+
 
 let stream = bot.stream('user');
 
@@ -19,7 +26,7 @@ stream.on('follow', followed);
 function followed(event) {
     let name = event.source.name;
     let screenName = event.source.screen_name;
-    
+
     console.log('I was followed by: ' + name + ' ' + screenName);
 }
 
@@ -72,7 +79,7 @@ function searchTweets() {
     let query = {q: TWITTER_SEARCH_PHRASE, result_type: "recent"};
 
     bot.get('search/tweets', query, (err, data, response) => {
-        if (err){
+        if (err) {
             console.error(`Bot couldn't find any tweets, Error: ${err.stack}`)
             return;
         }
@@ -84,5 +91,9 @@ function searchTweets() {
 }
 
 function saveToDb(tweetText) {
-    db.run(`INSET INTO \'RyzerTweets\' (tweet) VALUES (${tweetText})`);
+    connection.query(`INSERT INTO RyzerTweets SET tweet = ?`, connection.escape(tweetText), function (err, result) {
+        if (err){
+            console.error(err.stack)
+        }
+    })
 }
