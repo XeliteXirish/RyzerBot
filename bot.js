@@ -1,7 +1,6 @@
 const Twit = require('twit');
+const db = require('sqlite');
 const config = require('./config.json');
-
-//TODO 1/ Find controversial tweets from the #
 
 const bot = new Twit({
     consumer_key: config.consumer_key,
@@ -9,6 +8,8 @@ const bot = new Twit({
     access_token: config.access_token,
     access_token_secret: config.access_token_secret
 });
+
+db.open('./ryzer_tweets.sqlite').catch((err) => {console.error(`Error while opening database, Error: ${err.stack}`)});
 
 let stream = bot.stream('user');
 
@@ -24,9 +25,8 @@ function followed(event) {
 
 console.log('The bot is running...');
 
-// Now looking for tweet events
-// See: https://dev.twitter.com/streaming/userstreams
-stream.on('tweet', tweetEvent);
+//stream.on('tweet', tweetEvent);
+searchTweets();
 
 
 function tweetEvent(tweet) {
@@ -63,5 +63,26 @@ function tweetEvent(tweet) {
             }
         };
     }
+}
 
+function searchTweets() {
+
+    let TWITTER_SEARCH_PHRASE = '#controversial OR #freespeech';
+
+    let query = {q: TWITTER_SEARCH_PHRASE, result_type: "recent"};
+
+    bot.get('search/tweets', query, (err, data, response) => {
+        if (err){
+            console.error(`Bot couldn't find any tweets, Error: ${err.stack}`)
+            return;
+        }
+
+        data.statuses.forEach(status => {
+            saveToDb(status.text)
+        });
+    })
+}
+
+function saveToDb(tweetText) {
+    db.run(`INSET INTO \'RyzerTweets\' (tweet) VALUES (${tweetText})`);
 }
