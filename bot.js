@@ -86,15 +86,15 @@ function searchTweets() {
         }
 
         data.statuses.forEach(status => {
-            saveToDb(status.text);
+            saveToDb(status);
         });
     })
 }
 
-function saveToDb(tweetText) {
-    checkIsInDb(tweetText, (result) => {
+function saveToDb(tweet) {
+    checkIsInDb(tweet, (result) => {
         if (!result){
-            connection.query(`INSERT INTO RyzerTweets SET tweet = ?`, tweetText, function (err, result) {
+            connection.query(`INSERT INTO RyzerTweets SET tweet = ?`, tweet.text, function (err, result) {
                 if (err){
                     console.error(err.stack)
                 }
@@ -103,8 +103,8 @@ function saveToDb(tweetText) {
     })
 }
 
-function checkIsInDb(tweetText, callback) {
-    connection.query(`SELECT distinct 1 FROM RyzerTweets WHERE RyzerTweets.tweet = ?;`, tweetText, function (err, result) {
+function checkIsInDb(tweet, callback) {
+    connection.query(`SELECT distinct 1 FROM RyzerTweets WHERE RyzerTweets.tweet = ?;`, tweet.text, function (err, result) {
         if (err){
             console.error(err.stack)
         }
