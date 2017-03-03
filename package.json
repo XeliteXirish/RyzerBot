@@ -4,8 +4,8 @@
   "description": "An awesome chatter bot meant to tweet anything!",
   "main": "bot.js",
   "dependencies": {
-    "sqlite": "^2.3.0",
-    "twit": "^2.1.1"
+    "twit": "^2.1.1",
+    "mysql": "latest"
   },
   "devDependencies": {},
   "scripts": {
