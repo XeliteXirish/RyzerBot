@@ -32,7 +32,7 @@ function followed(event) {
 
 console.log('The bot is running...');
 
-//stream.on('tweet', tweetEvent);
+stream.on('tweet', tweetEvent);
 searchTweets();
 
 
@@ -75,7 +75,7 @@ function tweetEvent(tweet) {
 function searchTweets() {
     console.info('Checking for more tweets...');
 
-    let TWITTER_SEARCH_PHRASE = '#hate OR #controversial OR #freespeech';
+    let TWITTER_SEARCH_PHRASE = '#hate OR #controversial OR #harrasement';
 
     let query = {q: TWITTER_SEARCH_PHRASE, result_type: "recent"};
 
@@ -85,27 +85,37 @@ function searchTweets() {
             return;
         }
 
+        //console.log(data.statuses[0])
         data.statuses.forEach(status => {
-            saveToDb(status);
+            if (status.lang === 'en') {
+                saveToDb(status);
+            }
         });
     })
 }
 
 function saveToDb(tweet) {
     checkIsInDb(tweet, (result) => {
-        if (!result){
-            connection.query(`INSERT INTO RyzerTweets SET tweet = ?`, tweet.text, function (err, result) {
-                if (err){
+        if (!result) {
+
+            connection.query('INSERT INTO RyzerTweets (tweet, RTs, Favourites, tweetId) VALUES (' + connection.escape(cleanTweet(tweet.text)) + ', ' + tweet.retweet_count + ', ' + tweet.favorite_count + ', ' + tweet.id + ')', function (err, rows, fields) {
+
+                if (err) {
                     console.error(err.stack)
                 }
-            })
+            });
         }
     })
 }
 
+/**
+ * Checks to see if a tweet has already been stored in the database
+ * @param tweet
+ * @param callback
+ */
 function checkIsInDb(tweet, callback) {
-    connection.query(`SELECT distinct 1 FROM RyzerTweets WHERE RyzerTweets.tweet = ?;`, tweet.text, function (err, result) {
-        if (err){
+    connection.query(`SELECT distinct 1 FROM RyzerTweets WHERE RyzerTweets.tweetId = ${tweet.id};`, function (err, result) {
+        if (err) {
             console.error(err.stack)
         }
         let length = result.length;
@@ -113,6 +123,12 @@ function checkIsInDb(tweet, callback) {
         if (length > 0) callback(true);
         else callback(false);
     });
+}
+
+
+function cleanTweet(tweetText) {
+    const urlRegex =/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    return tweetText.replace("RT ", "").replace("RT", "").replace(urlRegex, "");
 }
 
 setInterval(searchTweets, 1800000);
